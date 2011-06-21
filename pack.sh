@@ -12,9 +12,9 @@ function usage() {
 }
 
 #
-# paramètres :
-# $1 => output      nom de l'archive à créer
-# $2 => git_rep     répertoire git
+# paramÃ¨tres :
+# $1 => output      nom de l'archive Ã  crÃ©er
+# $2 => git_rep     rÃ©pertoire git
 #
 function create_tar()
 {
@@ -44,10 +44,10 @@ function create_tar()
     fi
 }
 #
-# paramètres :
+# paramÃ¨tres :
 # $1 => input       nom du fichier listant les modifications
-# $2 => output      nom du répertoire dans lequel mettre les fichiers
-# $3 => git_rep     répertoire git
+# $2 => output      nom du rÃ©pertoire dans lequel mettre les fichiers
+# $3 => git_rep     rÃ©pertoire git
 #
 function create_dir()
 {
@@ -77,9 +77,9 @@ function create_dir()
     echo "directory created!"
 }
 #
-# paramètres :
-# $1 => tag_prod    tag git correspondant à l'image de la prod
-# $2 => git_rep     répertoire git
+# paramÃ¨tres :
+# $1 => tag_prod    tag git correspondant Ã  l'image de la prod
+# $2 => git_rep     rÃ©pertoire git
 # $3 => tag_dev     tag git correspondant au dev
 #
 # return : ouput    nom du fichier listant les modifications
@@ -106,7 +106,7 @@ function create_diff_file()
 }
 
 #
-# return : git_rep    racine vers le dépôt git
+# return : git_rep    racine vers le dÃ©pÃ´t git
 #
 function get_git_rep()
 {
@@ -144,7 +144,7 @@ function get_current_tag()
     echo $initial_tag_dev
 }
 
-# Récupération des options
+# RÃ©cupÃ©ration des options
 TAR="TRUE"
 while getopts hd option
 do
@@ -158,7 +158,7 @@ done
 shift_arg=`expr $OPTIND - 1`
 shift $shift_arg
 
-# Récupération des paramètres
+# RÃ©cupÃ©ration des paramÃ¨tres
 if [ $# = 0 ]
 then
     usage
@@ -168,7 +168,7 @@ then
 else
     dir_script=$(pwd)"/"            # On retient le dossier dans lequel on est
 
-    # Récupération du chemin vers le dépôt
+    # RÃ©cupÃ©ration du chemin vers le dÃ©pÃ´t
     git_rep=$(get_git_rep)
 
     tag_dev="prod"
