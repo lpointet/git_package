@@ -30,13 +30,12 @@ function create_tar()
 
     for line in $(cat $input)
     do
-        echo ${git_rep}${line}
         if [ -f ${git_rep}${line} ]
         then
             expression=${expression}" "$line
         fi
     done
-echo $expression
+
     tar $option -czf $output $expression
 
     if [ -f $output ]
@@ -147,7 +146,7 @@ function get_current_tag()
         fi
     fi
     initial_tag_dev=${initial_tag_dev##refs/heads/}
-    
+
     echo $initial_tag_dev
 }
 
