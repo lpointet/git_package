@@ -1,13 +1,13 @@
 #!/bin/bash
 function usage() {
-    printf "Usage %s: [-h] [-d] <tag_prod> <output_file> [git_rep] [tag_dev]\n" $(basename $0)
+    printf "Usage %s: [-h] [-d] <output_file> <old_tag> [new_tag] [git_rep]\n" $(basename $0)
     echo ""
     echo "  -h              : Show this help"
     echo "  -d              : Output a directory instead of an archive"
-    echo "  <tag_prod>      : The name of the tag with prod files"
     echo "  <output_file>   : The name of the generated archive or directory"
+    echo "  <old_tag>      : The name of the tag with old version (prod) files"
+    echo "  [new_tag]       : The name of the tag with new version (dev) files (default: master)"
     echo "  [git_rep]       : The git repository file name (default: ./)"
-    echo "  [tag_dev]       : The name of the tag with development files (default: master)"
     echo ""
 }
 
@@ -179,32 +179,36 @@ else
 
     tag_dev="master"
 
-    if [ -d $3 ] && [ ! $3 = "" ]   # $3 correspond au git_rep
+    if [ ! $4 = "" ] && [ -d $4 ]            # $4 est le git_rep
     then
-        cd $3
+        cd $4
         git_rep=$(pwd)"/"
         cd $dir_script
 
-        if [ ! $4 = "" ]            # $4 est le tag_dev
-        then
-            tag_dev=$4
-        fi
-    elif [ ! $3 = "" ]              # $3 est le tag_dev
-    then
         tag_dev=$3
+    elif [ ! $3 = "" ]                      # $3 correspond au git_rep ou tag_dev
+    then
+        if [ -d $3 ]                        # $3 correspond au git_rep
+        then
+            cd $3
+            git_rep=$(pwd)"/"
+            cd $dir_script
+        else                                # $3 correspond au tag_dev
+            tag_dev=$3
+        fi
     fi
 
     cd $git_rep
     initial_tag_dev=$(get_current_tag)
     cd $dir_script
 
-    input=$(create_diff_file ${1} ${git_rep} ${tag_dev})
+    input=$(create_diff_file ${2} ${git_rep} ${tag_dev})
 
     if [ $TAR = "FALSE" ]
     then
-        create_dir $input $2 $git_rep
+        create_dir $input $1 $git_rep
     else
-        create_tar $2 $git_rep
+        create_tar $1 $git_rep
     fi
 
     if [ -f $input ]
