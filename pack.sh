@@ -6,7 +6,7 @@ function usage() {
     echo "  -d              : Output a directory instead of an archive"
     echo "  <output_file>   : The name of the generated archive or directory"
     echo "  <old_tag>      : The name of the tag with old version (prod) files"
-    echo "  [new_tag]       : The name of the tag with new version (dev) files (default: master)"
+    echo "  [new_tag]       : The name of the tag with new version (dev) files (default: prod)"
     echo "  [git_rep]       : The git repository file name (default: ./)"
     echo ""
 }
@@ -86,22 +86,16 @@ function create_dir()
 #
 function create_diff_file()
 {
-    tag_dev="master"
     tag_prod=$1
     git_rep=$2
 
     dir_script=$(pwd)"/"
     output="tmp.txt"
 
-    if [ ! $3 = "" ]
-    then
-        tag_dev=$3
-    fi
-
     cd $git_rep
     git diff $tag_dev $tag_prod --name-only > ${dir_script}${output}
 
-    if [ ! $tag_dev = "master" ]
+    if [ ! $tag_dev = $initial_tag_dev ]
     then
         git checkout $tag_dev --quiet
     fi
@@ -177,7 +171,7 @@ else
     # Récupération du chemin vers le dépôt
     git_rep=$(get_git_rep)
 
-    tag_dev="master"
+    tag_dev="prod"
 
     if [ ! $4 = "" ] && [ -d $4 ]            # $4 est le git_rep
     then
@@ -202,7 +196,7 @@ else
     initial_tag_dev=$(get_current_tag)
     cd $dir_script
 
-    input=$(create_diff_file ${2} ${git_rep} ${tag_dev})
+    input=$(create_diff_file ${2} ${git_rep})
 
     if [ $TAR = "FALSE" ]
     then
