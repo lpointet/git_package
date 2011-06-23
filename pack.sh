@@ -14,10 +14,10 @@ function usage() {
 #
 # paramètres :
 # $1 => output      nom de l'archive à créer
-# $2 => git_rep     répertoire git
 #
 function create_tar()
 {
+    local output=""
     if [ ${1%.*} = $1 ]
     then
         output=$1".tar.gz"
@@ -27,33 +27,41 @@ function create_tar()
     git_rep=$2
     option=" --directory ${git_rep} "
     expression=""
+    suppr=""
 
     for line in $(cat $input)
     do
         if [ -f ${git_rep}${line} ]
         then
             expression=${expression}" "$line
+        else # fichier supprimé
+            suppr=${suppr}" "$line
         fi
     done
 
-    tar $option -czf $output $expression
-
-    if [ -f $output ]
+    if [ ! $expression = "" ]
     then
-        echo "archive $output created!"
+        tar $option -czf $output $expression
+        if [ -f $output ]
+        then
+            echo "archive $output created!"
+        fi
+    fi
+
+    if [ ! $suppr = "" ]
+    then
+        create_bash_file ${output%%.*} $suppr
     fi
 }
 #
 # paramètres :
-# $1 => input       nom du fichier listant les modifications
-# $2 => output      nom du répertoire dans lequel mettre les fichiers
+# $1 => output      nom du répertoire dans lequel mettre les fichiers
 # $3 => git_rep     répertoire git
 #
 function create_dir()
 {
-    input=$1
-    output=$2
-    git_rep=$3
+    local output=$1
+    local suppr=""
 
     if [ ! -d $output ]
     then
@@ -71,26 +79,29 @@ function create_dir()
                 mkdir -p $dir
             fi
             cp ${git_rep}${line} ${output}"/"${line}
+        else # fichier supprimé
+            suppr=${suppr}" "$line
         fi
     done
+
+    if [ ! $suppr = "" ]
+    then
+        create_bash_file $output $suppr
+    fi
 
     echo "directory created!"
 }
 #
 # paramètres :
 # $1 => tag_prod    tag git correspondant à l'image de la prod
-# $2 => git_rep     répertoire git
-# $3 => tag_dev     tag git correspondant au dev
 #
 # return : ouput    nom du fichier listant les modifications
 #
 function create_diff_file()
 {
-    tag_prod=$1
-    git_rep=$2
+    local tag_prod=$1
 
-    dir_script=$(pwd)"/"
-    output="tmp.txt"
+    local output="tmp.txt"
 
     cd $git_rep
     git diff $tag_dev $tag_prod --name-only > ${dir_script}${output}
@@ -110,7 +121,7 @@ function create_diff_file()
 #
 function get_git_rep()
 {
-    git_rep="$(git rev-parse --git-dir 2>/dev/null)"
+    local git_rep="$(git rev-parse --git-dir 2>/dev/null)"
     git_rep="${git_rep%/.git}"
     if [ ! $git_rep ]
     then
@@ -142,6 +153,38 @@ function get_current_tag()
     initial_tag_dev=${initial_tag_dev##refs/heads/}
 
     echo $initial_tag_dev
+}
+
+#
+# paramètres :
+# $1 => output      nom du fichier à générer
+# $2 => suppr       liste des fichiers à supprimer
+#
+function create_bash_file()
+{
+    local output=$1
+    local tmp=$1
+    local suppr=$2
+    local i=1
+
+    while [ -f $tmp".sh" ]
+    do
+        tmp=${output}${i}
+        i=`expr $i + 1`
+    done
+    output=$tmp".sh"
+
+    echo "#!/bin/bash" > $output
+    echo "rm -f "$suppr >> $output
+    chmod 744 $output
+
+    if [ -f $output ]
+    then
+        echo "Bash script $output generated : you need to execute it!"
+    else
+        echo "Error with bash script generation, please execute this command line after deploying:"
+        echo "rm -f "$suppr
+    fi
 }
 
 # Récupération des options
@@ -196,13 +239,13 @@ else
     initial_tag_dev=$(get_current_tag)
     cd $dir_script
 
-    input=$(create_diff_file ${2} ${git_rep})
+    input=$(create_diff_file ${2})
 
     if [ $TAR = "FALSE" ]
     then
-        create_dir $input $1 $git_rep
+        create_dir $1
     else
-        create_tar $1 $git_rep
+        create_tar $1
     fi
 
     if [ -f $input ]
