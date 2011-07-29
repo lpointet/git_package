@@ -27,29 +27,40 @@ function create_tar()
     option=" --directory ${git_rep} "
     expression=""
     suppr=""
+    local create_bash=0
+    local do_tar=0
 
-    for line in $(cat $input)
+    old_IFS=$IFS     # sauvegarde du séparateur de champ
+    IFS=$'\n'     # nouveau séparateur de champ, le caractère fin de ligne
+    for line in $(cat ${input})
     do
-        if [ -f ${git_rep}${line} ]
+        if [ -f "${git_rep}${line}" ]
         then
-            expression=${expression}" "$line
+            expression=${expression}" \"${line}\""
+            do_tar=1
         else # fichier supprimé
-            suppr=${suppr}" "$line
+            suppr=${suppr}" \"${line}\""
+            create_bash=1
         fi
     done
+    IFS=$old_IFS     # rétablissement du séparateur de champ par défaut
 
-    if [ ! $expression = "" ]
+    if [ $do_tar = 1 ]
     then
-        tar $option -czf $output $expression
+        echo "#!/bin/bash" > tmp_bash.sh
+        echo "tar $option -czf $output $expression" >> tmp_bash.sh
+        chmod +x tmp_bash.sh
+        ./tmp_bash.sh
+        rm -f tmp_bash.sh
         if [ -f $output ]
         then
             echo "archive $output created!"
         fi
     fi
 
-    if [ ! $suppr = "" ]
+    if [ $create_bash = 1 ]
     then
-        create_bash_file ${output%%.*} $suppr
+        create_bash_file ${output%%.*} "${suppr}"
     fi
 }
 #
@@ -60,6 +71,7 @@ function create_dir()
 {
     local output=$1
     local suppr=""
+    local create_bash=0
 
     if [ ! -d $output ]
     then
@@ -78,13 +90,14 @@ function create_dir()
             fi
             cp ${git_rep}${line} ${output}"/"${line}
         else # fichier supprimé
-            suppr=${suppr}" "$line
+            suppr=${suppr}" \"${line}\""
+            create_bash=1
         fi
     done
 
-    if [ ! $suppr = "" ]
+    if [ $create_bash = 1 ]
     then
-        create_bash_file $output $suppr
+        create_bash_file $output "${suppr}"
     fi
 
     echo "directory created!"
