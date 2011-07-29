@@ -174,7 +174,7 @@ function create_bash_file()
 
     echo "#!/bin/bash" > $output
     echo "rm -f "$suppr >> $output
-    chmod 744 $output
+    chmod 755 $output
 
     if [ -f $output ]
     then
