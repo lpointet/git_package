@@ -24,7 +24,6 @@ function create_tar()
     else
         output=$1
     fi
-    git_rep=$2
     option=" --directory ${git_rep} "
     expression=""
     suppr=""
@@ -56,7 +55,6 @@ function create_tar()
 #
 # paramètres :
 # $1 => output      nom du répertoire dans lequel mettre les fichiers
-# $3 => git_rep     répertoire git
 #
 function create_dir()
 {
