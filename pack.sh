@@ -235,6 +235,9 @@ else
 
     cd $git_rep
     initial_tag_dev=$(get_current_tag)
+
+    # Suppression des modifications locales et non commitées dans les fichiers
+    git stash > /dev/null
     cd $dir_script
 
     input=$(create_diff_file ${2})
@@ -251,10 +254,12 @@ else
         rm $input
     fi
 
+    cd $git_rep
     if [ ! $tag_dev = $initial_tag_dev ]
     then
-        cd $git_rep
         git checkout $initial_tag_dev --quiet
-        cd $dir_script
     fi
+    # Remise en place des modifications locales non commitées
+    git stash pop >& /dev/null
+    cd $dir_script
 fi
